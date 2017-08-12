@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		img{
+     display: block;
+     margin: 0 auto;
+     margin-top: 100px;
+
+   }
+
+    .fade_image{
+       position:absolute;    
+           animation-name: fadeInOut;
+           animation-timing-function: ease-in-out;
+           animation-iteration-count: infinite;
+           animation-duration: 5s;
+           animation-direction: alternate;
+    }
+    @keyframes fadeInOut{
+          0% {
+        opacity:1;
+     }
+    25% {
+        opacity:0;
+    }
+    50% {
+        opacity: 0;    
+    }
+    75% {
+        opacity:1;
+    }
+    }
+ </style>
+</head>
+<body>
+  <img data-src="http://pic62.nipic.com/file/20150319/12632424_132215178296_2.jpg" class="fade_image" />
+  <img data-src="http://img1.imgtn.bdimg.com/it/u=3051792487,3706952710&fm=26&gp=0.jpg" />
+  <img data-src="http://img1.imgtn.bdimg.com/it/u=692833325,3492072746&fm=26&gp=0.jpg" />
+  <img data-src="http://img0.imgtn.bdimg.com/it/u=267608187,3672416343&fm=27&gp=0.jpg" />
+  <img data-src="http://img4.imgtn.bdimg.com/it/u=2512994383,1092237231&fm=26&gp=0.jpg" />
+  <img data-src="https://drscdn.500px.org/photo/21086277/h%3D450/10d665f2e2330606594b235c5b50786a" />
+  <img data-src="http://img0.imgtn.bdimg.com/it/u=1085727832,933361700&fm=26&gp=0.jpg" />
+  <img data-src="http://img0.imgtn.bdimg.com/it/u=1768770686,623173162&fm=26&gp=0.jpg" />
+  <img data-src="http://pic35.nipic.com/20131121/2531170_145358633000_2.jpg" />
+  <img data-src="http://img5.imgtn.bdimg.com/it/u=2297064947,2839662250&fm=27&gp=0.jpg" />
+  <img data-src="http://img1.imgtn.bdimg.com/it/u=1691236866,2297927683&fm=26&gp=0.jpg" />
+  <img data-src="http://img0.imgtn.bdimg.com/it/u=3368323297,2417132385&fm=26&gp=0.jpg" />
+  <img data-src="http://pic33.nipic.com/20130906/12906030_152844052000_2.png" />
+
+  <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript">
+  	// var img = new Image();
+  	// img.onload = function () {
+  	// 	 alert(1)
+  	// }
+  	//  img.onerror=function(){alert("error!")};
+  	//  img.src="https://drscdn.500px.org/photo/42044774/h%3D450/178f9e29fbce6f35d4fdf77af7c7032a"
+  	//  window.onload = function(){
+  	//  	alert('window')
+  	//  }
+    // 
+    (function(){
+      var lazyLoad = function () {
+        this.windowWidth = $(window).width();
+        this.windowHeight = $(window).height();
+        this.elem = $('img[data-src]');
+      }
+      lazyLoad.prototype = {
+        defaults: {
+          overColor:'#FFF',   //图片渲染完成的背景色
+          divContents : '',  //图片渲染完成的提示文字
+          showTime:300,    //渲染到页面所用的时间
+          offsetBottom : 0,   ///距离底部的距离
+          offsetTop : 0 ,    ///距离顶部的距离
+          onLoadEnd : function () {},  //加载完成的回调
+          onLoadStart : function () {},  //开始加载的回调
+          onLoadError : function () {}    //错误的回调
+        },
+        //使用Image函数来对添加的图片进行控制
+        loadImg : function (elem , callback) {
+         var img = new Image() , self = this;
+         img.src = elem;
+         //加载的回调
+         img.onload = function () {
+          self.defaults.onLoadStart()
+          callback()
+        }
+        //图片加载错误
+        img.onerror = function () {
+         self.imgOnerror();
+       } 
+     },
+     //加载错误时候的回调
+     imgOnerror : function () {
+        self.defaults.onLoadError()
+     },
+     //入口函数
+     init : function () {
+      //大概意思就是得到每张图片的距离如果满足条件就存进一个数组，然后对数组里面的值进行回调
+      var documentScroll = $(document).scrollTop() , self = this , listArray = [] ;
+      this.elem.each(function(index){
+        var contentImg = $(this);
+        if(!contentImg.attr('data-content')){
+          if(contentImg.offset().top - documentScroll + self.defaults.offsetTop && contentImg.offset().top < (self.windowHeight + self.defaults.offsetBottom + documentScroll )){
+              console.log(11)
+            listArray.push(index)
+          }
+        }
+      })
+      //生成图片并进行回调
+      if(listArray.length !== 0){
+        this.showImg(listArray[0] , function(){
+         self.init();
+       });
+      }
+    },
+    //具体生成图片的的函数
+    showImg : function (index , callback) {
+     var self = this;
+     this.loadImg(
+       self.getAttr(index),
+       function () {
+        try {
+          self.imgContent(index , callback)
+        }catch(error) {
+        }
+      }
+      )
+   },
+   //加载图片
+   imgContent: function (index,callback) {
+    if(this.elem.eq(index).attr("data-content")){
+      return;
+    }
+    var elem =  this.elem.eq(index) , imgW  , imgH  , imgTop , imgLeft;
+    elem.css("visibility","hidden");
+    this.elem.eq(index).attr("src" , this.getAttr(index))
+    imgW  = elem.width();
+    imgH = elem.height();
+    imgTop = elem.offset().top;
+    imgLeft = elem.offset().left
+    elem.css("visibility","visible");
+    this.showDiv(index , imgW , imgH ,imgTop ,  imgLeft , callback);
+    this.elem.eq(index).attr("data-content","true");
+  },
+  //得到data-src的属性
+  getAttr : function (index) {
+   return this.elem.eq(index).attr("data-src")
+ },
+ //渐变效果
+ showDiv : function (count,w,h ,offsetTop,offsetLeft , callback) {
+  var self = this;
+  $("body").append("<div class='lazy-div"+count+"' style='background-color: "+this.defaults.overColor+";position:absolute;width:"+w+"px;height:"+h+"px;top:"+offsetTop+"px;left:"+offsetLeft+"px;z-index:500'>"+self.defaults.divContents+"</div>");
+  //渐变效果
+  $('.lazy-div'+count+'').animate({opacity : 0} , this.defaults.showTime  , function(){
+    $(this).remove();
+    self.defaults.onLoadEnd();
+    callback()
+  })
+ }
+ }
+ window.imgLazyLoad = function  (){
+    var imgLoad = new lazyLoad();
+    imgLoad.init()
+  window.onscroll = function () {
+    imgLoad.init()
+  }
+ }
+ }())
+    imgLazyLoad()
+  </script>
+</body>
+</html>

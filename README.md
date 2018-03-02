@@ -1,1 +1,1 @@
-![gifcask](img/gif)
+![gifcask](img.gif)
